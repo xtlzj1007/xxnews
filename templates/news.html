@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block link %}
+    <style>
+        textarea {
+            border: 2px solid skyblue;
+        }
+
+        .restore {
+            background-color: #f5f5f5;
+        }
+    </style>
+{% endblock %}
+{% block container %}
+    <div class="container">
+        <div class="col-md-9 news">
+            <h1 class="title">{{ data.title }}</h1>
+            <p class="info">
+                <span>阅读：{{ data.clicked }}</span> •
+                <span>{{ data.user_id.username }}</span> •
+                <span>{{ data.publish_time }}</span>
+                <span class="label label-default">{{ data.picture }}</span>
+            </p>
+            <div class="content">
+                {{ data.content |safe }}
+            </div>
+            <hr>
+            <div class="comment">
+                <form action="/news/{{ data.id }}" method="post">
+                    {{ form.content }}
+                    {% csrf_token %}
+                    <input type="submit" value="评论">
+                </form>
+                <hr>
+            </div>
+            <div class="show_comment">
+                {% for comment in comment_list %}
+                    <span>{{ comment.user_id.username }}:</span><span>({{ comment.publish_time }}) </span>
+                    <div>
+                        {{ comment.content|safe }}
+                    </div>
+                    <div class="restore">
+                        <a onclick="showRestore('{{ comment.id }}');">回复</a>
+                        <div id="restore_{{ comment.id }}" hidden>
+                            <form action="/news/{{ data.id }}" method="post">
+                                <input hidden type="text" name="restore" value="{{ comment.id }}">
+                                <input hidden type="text" name="restore_user" value="{{ comment.user_id.id }}">
+                                <textarea name="content" cols="77" rows="4">回复:{{ comment.user_id.username }}</textarea>
+                                {% csrf_token %}
+                                <input type="submit" value="回复">
+                            </form>
+                            <div>
+                                {% for restore  in comment.re_comment.all %}
+                                    <span>{{ restore.user_id.username }}回复{{ restore.restore_user.username }}</span>
+                                    <span>({{ restore.publish_time }}) </span>
+                                    <div>
+                                        {{ restore.content|safe }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <hr>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="side-bar-well">
+                <strong class="side-bar-well-title">
+                    24小时热闻
+                </strong>
+                {% for hot in hot_news %}
+                    <a href="/news/{{ hot.id }}" class="news-item">
+                        <div class="news-title">{{ hot.title }}</div>
+                        <div class="news-info">
+                            {{ hot.clicked }} ⋅ {{ hot.comment_set.count }}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block script %}
+    <script type="text/javascript" src="/static/ckeditor/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="/static/ckeditor/ckeditor-init.js"></script>
+    <script>
+        function showRestore(id) {
+            $("#restore_" + id).toggle();
+        }
+    </script>
+{% endblock %}
